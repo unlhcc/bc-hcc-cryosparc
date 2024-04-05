@@ -1,0 +1,17 @@
+#!/bin/bash
+
+#rm ${CRYOSPARC_DB_PATH}/*sock
+#rm ${CRYOSPARC_DB_PATH}/*lock
+# remove workers
+echo -n "Running clean script on "
+echo $HOSTNAME
+cryosparcm cli "remove_scheduler_target_node(\"$HOSTNAME\")"
+cryosparcm cluster remove <%= context.cluster %>
+
+# Make a database backup to hedge our bets
+cryosparcm backup \
+	--dir=${WORK}/.cryosparc/db_backups \
+	--file=database_backup_$(date +"%A").archive
+
+# shutdown master
+cryosparcm stop

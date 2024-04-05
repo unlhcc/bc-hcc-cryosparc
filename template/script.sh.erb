@@ -1,0 +1,205 @@
+#!/bin/bash
+<%-
+begin
+  cmd = "rpm -E %{rhel}"
+  output, status = Open3.capture2e(cmd)
+  if status.success?
+    rhel_version = output.strip.to_s
+    case rhel_version
+    when "7"
+      xfwm4_args="--daemon"
+    when "8"
+      xfwm4_args=""
+    end
+  else
+    raise output
+  end
+  rescue => e
+  xfwm4_args="--daemon"
+  end
+
+session_dir = session.staged_root
+new_session_file = Pathname.new(session_dir.to_s) + ".first_run"
+force_new_session = new_session_file.exist?
+%>
+
+# init lmod within container
+[[ -f /etc/profile.d/modules.sh ]] && source /etc/profile.d/modules.sh
+module purge
+
+# Set working directory to home directory
+cd "${HOME}"
+
+# Ensure that the user's configured login shell is used
+export SHELL="$(getent passwd $USER | cut -d: -f7)"
+
+# Set variables
+export WORKING_DIR="<%= session_dir %>"
+
+export MASTER_HOSTNAME=$(hostname -s)
+export CS_LICENSE="<%= context.cryosparc_license_id %>"
+export CS_HOST="${HOSTNAME}"
+export CS_PORT=${cs_port} #$(find_port localhost 39100 100)
+export CS_PASSWORD="<%= context.cryosparc_user_password %>"
+export SLURM_MEMORY="<%= context.bc_memory.to_i %>"
+export SLURM_CORES="<%= context.bc_num_cores.to_i %>"
+export CS_JOB_GPU_PARTITION="<%= context.cryosparc_job_gpu_partition %>"
+export CS_DATADIR=$(echo -n "<%= context.cryosparc_datadir %>")
+
+# New session
+# <%= force_new_session %>
+# <%= new_session_file %>
+
+echo 'CS_DATADIR:' $CS_DATADIR
+
+echo 'SLURM_MEMORY ' $SLURM_MEMORY
+echo 'SLURM_CORES ' $SLURM_CORES
+
+echo 'CS_PASSWORD ' $CS_PASSWORD
+echo 'CRYOSPARC LICENSE ' $CS_LICENSE
+echo 'CRYOSPARC BASE PORT ' $CS_PORT
+echo 'CS_JOB_GPU_PARTITION ' $CS_JOB_GPU_PARTITION
+
+<%- if context.cryosparc_new_session == "1" -%>
+  # Replace license, host, port values in the config files
+  envsubst '${CS_LICENSE}:${CS_HOST}:${CS_PORT}' < <%= context.cryosparc_datadir %>/config.sh.in > /opt/cryosparc/cryosparc_master/config.sh
+  envsubst '${CS_LICENSE}:${CS_HOST}:${CS_PORT}' < <%= context.cryosparc_datadir %>/config.sh.in > /opt/cryosparc/cryosparc_worker/config.sh
+<%- else -%>
+  if [ -f ${WORKING_DIR}/.first_run ]
+  then
+    # Replace license, host, port values in the config files
+    envsubst '${CS_LICENSE}:${CS_HOST}:${CS_PORT}' < <%= context.cryosparc_datadir %>/config.sh.in > /opt/cryosparc/cryosparc_master/config.sh
+    envsubst '${CS_LICENSE}:${CS_HOST}:${CS_PORT}' < <%= context.cryosparc_datadir %>/config.sh.in > /opt/cryosparc/cryosparc_worker/config.sh  
+  else
+    cp  /opt/cryosparc/cryosparc_master/config.sh /tmp 
+    sed -i "s/CRYOSPARC_MASTER_HOSTNAME=.*/CRYOSPARC_MASTER_HOSTNAME=${MASTER_HOSTNAME}/" /tmp/config.sh
+    sed -i "s/CRYOSPARC_BASE_PORT=.*/CRYOSPARC_BASE_PORT=${CS_PORT}/"  /tmp/config.sh
+    sed -i "s#CRYOSPARC_DB_PATH=.*#CRYOSPARC_DB_PATH=${CS_DATADIR}#"  /tmp/config.sh
+    sed -i "s/CRYOSPARC_LICENSE_ID=.*/CRYOSPARC_LICENSE_ID=${CS_LICENSE}/"  /tmp/config.sh
+    cp -fav /tmp/config.sh  /opt/cryosparc/cryosparc_master/config.sh
+    cp -fav /tmp/config.sh  /opt/cryosparc/cryosparc_worker/config.sh
+  fi
+<%- end -%>
+
+# Check for GPUs
+<%- if context.bc_gres.to_s == "gpu" or (context.bc_gres.to_s =~ %r"gpu") == 0 -%>
+	usegpu="--gpus $CUDA_VISIBLE_DEVICES"
+<%- else -%>
+	usegpu="--nogpu"
+<%- end -%>
+
+
+# Set CryoSPARC user information
+user_email="${USER}@swan.unl.edu"
+user_name="${USER}"
+user_password="${CS_PASSWORD}"
+#user_password="cryoadmin"
+user_firstname="$(getent passwd $USER | cut -d: -f5 | cut -f1 -d ' ')"
+user_lastname="$(getent passwd $USER | cut -d: -f5 | cut -f2 -d ' ')"
+
+# Env vars for the cryosparc-tools package
+export CRYOSPARC_LICENSE_ID="${CS_LICENSE}"
+export CRYOSPARC_EMAIL="${user_email}"
+export CRYOSPARC_PASSWORD="${user_password}"
+export CRYOSPARC_SLURM_MEMORY=`echo $((SLURM_MEMORY/8))`
+
+# Launch CryoSPARC
+<%- if context.cryosparc_new_session == "1" -%>
+  cryosparcm start &
+  sleep 30
+  cryosparcm createuser \
+  --email $user_email \
+  --password $user_password \
+  --username $user_name \
+  --firstname $user_firstname \
+  --lastname  $user_lastname
+<%- else -%>
+  if [ -f ${WORKING_DIR}/.first_run ]
+  then
+    cryosparcm start &
+    sleep 30
+    cryosparcm createuser \
+    --email $user_email \
+    --password $user_password \
+    --username $user_name \
+    --firstname $user_firstname \
+    --lastname  $user_lastname
+  else
+    cryosparcm start database &
+    sleep 15
+    cryosparcm fixdbport &
+    cryosparcm restart &
+    sleep 30
+    cryosparcm resetpassword --email $user_email --password $user_password
+   fi
+<%- end -%>
+
+cryosparcm status
+
+firefox -foreground -url http://${MASTER_HOSTNAME}.swan.hcc.unl.edu:${CS_PORT} &
+
+cryosparcw connect --worker ${MASTER_HOSTNAME} --master ${MASTER_HOSTNAME} --port ${CS_PORT} --ssdpath "/tmp" $usegpu --rams ${CRYOSPARC_SLURM_MEMORY} --cpus ${SLURM_CORES}
+# https://discuss.cryosparc.com/t/error-assigning-cpus-to-worker/9875
+cryosparcw connect --worker ${MASTER_HOSTNAME} --master ${MASTER_HOSTNAME} --port ${CS_PORT} --ssdpath "/tmp" $usegpu --rams ${CRYOSPARC_SLURM_MEMORY} --cpus ${SLURM_CORES} --update
+
+# create cluster configuration directory
+mkdir -p ${WORKING_DIR}/cluster_folder
+
+echo `pwd`
+# Write cluster configuration json file
+cat << EOF > ${WORKING_DIR}/cluster_folder/cluster_info.json
+{
+"name" : "<%= context.cluster %>",
+"worker_bin_path" : "/opt/cryosparc/cryosparc_worker/bin/cryosparcw",
+"cache_path" : "/tmp",
+"cache_reserve_mb" : 10000,
+"cache_quota_mb": null,
+"send_cmd_tpl" : "{{ command }}",
+"qsub_cmd_tpl" : "cd ${WORK} && sbatch {{ script_path_abs }}",
+"qstat_cmd_tpl" : "squeue -j {{ cluster_job_id }}",
+"qdel_cmd_tpl" : "scancel {{ cluster_job_id }}",
+"qinfo_cmd_tpl" : "sinfo"
+}
+EOF
+
+# Write SLURM job submission template
+cat << EOF > ${WORKING_DIR}/cluster_folder/cluster_script.sh
+#!/bin/bash
+#SBATCH --job-name=cryosparc_{{ project_uid }}_{{ job_uid }}
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node={{ num_cpu }}
+{%- if num_gpu == 0 %}
+#SBATCH --partition=batch
+{%- else %}
+#SBATCH --partition=${CS_JOB_GPU_PARTITION},gpu
+#SBATCH --gres=gpu:{{ num_gpu }}
+{%- endif %}
+#SBATCH --mem={{ (ram_gb*1000)|int }}MB
+#SBATCH --time=168:00:00
+#SBATCH --output={{ job_dir_abs }}/job_%J.out
+#SBATCH --error={{ job_dir_abs }}/job_%J.err
+#SBATCH --export=NONE
+
+module purge
+module load apptainer
+
+echo "CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES}
+
+#export RUN_ARGS="{{ run_args }}"
+
+apptainer exec -B <%= context.cryosparc_datadir %>/config.sh:<%= context.cryosparc_worker_path %>/config.sh <%= context.cryosparc_image_base %>-<%= context.cryosparc_version %>.sif {{ worker_bin_path }} run {{ run_args }}
+EOF
+
+pushd ${WORKING_DIR}/cluster_folder && cryosparcm cluster connect && popd
+#cryosparcm restart
+
+# Ensure that the user's configured login shell is used
+export SHELL="$(getent passwd $USER | cut -d: -f7)"
+
+# Set per-distro XDG_CONFIG_HOME due to path differences and such
+export XDG_CONFIG_HOME="$HOME/.config-ood-$(lsb_release -is)"
+
+# Start up desktop
+echo "Launching desktop '<%= context.desktop %>'..."
+source "<%= session.staged_root.join("desktops", "#{context.desktop}.sh") %>"
+echo "Desktop '<%= context.desktop %>' ended..."

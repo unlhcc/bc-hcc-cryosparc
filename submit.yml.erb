@@ -1,0 +1,129 @@
+<%-
+cores = bc_num_cores.blank? ? 1 : bc_num_cores.to_i
+mem = bc_memory.blank? ? 1 : bc_memory.to_i
+nodes = bc_num_slots.blank? ? 1 : bc_num_slots.to_i
+
+ENV["WORK"]=ENV["HOME"].sub("home","work")
+ENV["COMMON"]=ENV["HOME"].sub("home","common")
+output,status = Open3.capture2e("echo %s" % [cryosparc_datadir])
+datadir = Pathname.new(output.strip.to_s)
+datadir_exists = datadir.directory?
+%>
+
+---
+batch_connect:
+  template: vnc
+  set_host: "host=$(hostname)"
+  timeout: <%= (bc_num_hours.to_i * 3600) - 120 %>
+  conn_params: 
+    - cryosparc_user_password
+    - cs_port
+  timeout:
+#  clean_script: "..."
+  clean_file: "clean.sh"
+  websockify_cmd: '/usr/local/bin/websockify'
+  script_wrapper: |
+    export WORK=${HOME/#\/home/\/work}
+    export COMMON=${HOME/#\/home/\/common}
+    export APPTAINER_CACHEDIR=${WORK}/.apptainer
+    export REGISTRY="hcc-docker-registry.unl.edu"
+    cat << "CTRSCRIPT" > container.sh
+    cat /etc/passwd.system >> /etc/passwd
+    export PATH="${PATH}:/opt/TurboVNC/bin:/util/opt/bin"
+    export XFCE_ROOT="/"
+    touch $HOME/.cache/sessions/xfce4-session-`hostname`:1
+    %s
+    CTRSCRIPT
+    # https://github.com/hpcng/singularity/issues/5185
+    cat << "BASE" > /tmp/99-base.sh
+    if [ -z "${LD_LIBRARY_PATH}" ]; then
+      LD_LIBRARY_PATH="/.singularity.d/libs"
+    else
+      LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/.singularity.d/libs"
+    fi
+    export LD_LIBRARY_PATH
+    export PS1="[\u@\h \W]\$ "
+    BASE
+    chmod +x /tmp/99-base.sh
+
+    SLURM_BIND_MOUNTS=""
+    # SLURM ######################################################################
+    SLURM_BIND_MOUNTS+=",/etc/slurm/slurm.conf"
+    SLURM_BIND_MOUNTS+=",/usr/lib64/slurm"
+    for F in $( rpm -ql slurm | grep '^/usr/lib64/lib' ) ; do
+      SLURM_BIND_MOUNTS+=",$F"
+    done
+    for F in $( rpm -ql slurm | grep '^/usr/bin/' ) ; do
+      SLURM_BIND_MOUNTS+=",$F"
+    done
+
+    # MUNGE ######################################################################
+    SLURM_BIND_MOUNTS+=",/var/run/munge"
+    for F in $( rpm -ql munge-libs | grep '^/usr/lib64/lib' ) ; do
+      SLURM_BIND_MOUNTS+=",$F"
+    done
+
+    ##############################################################################
+    # Use system SSSD and include password file for local entries (e.g. slurm, munge)
+    SLURM_BIND_MOUNTS+=",/var/lib/sss/pipes"
+    SLURM_BIND_MOUNTS+=",/var/lib/sss/mc"
+    SLURM_BIND_MOUNTS+=",/etc/passwd:/etc/passwd.system"
+
+    export APPTAINER_BINDPATH="/home,/work,/common,/util,/media,/mnt,/srv,/var/run,/run,/tmp/99-base.sh:/.singularity.d/env/99-base.sh:ro,$SLURM_BIND_MOUNTS"
+
+    # <%= ENV["HOME"] %>
+    # <%= ENV["WORK"] %>
+    # <%= ENV["COMMON"] %>
+    # <%= datadir_exists %>
+    # <%= staged_root %>
+
+
+    # create script
+    <%- if cryosparc_new_session == "1" or ! datadir_exists -%>
+     touch <%= staged_root %>/.first_run
+     rm -rf <%= cryosparc_datadir %>
+     mkdir -p <%= cryosparc_datadir %>/run
+     touch <%= cryosparc_datadir %>/config.sh
+     cat <<EOF > <%= cryosparc_datadir %>/config.sh.in
+     export CRYOSPARC_LICENSE_ID=\${CS_LICENSE}
+     export CRYOSPARC_MASTER_HOSTNAME=\${CS_HOST}
+     export CRYOSPARC_DB_PATH=<%= cryosparc_datadir %>
+     export CRYOSPARC_BASE_PORT=\${CS_PORT}
+     export CRYOSPARC_DEVELOP=false
+     export CRYOSPARC_INSECURE=false
+     export CRYOSPARC_CLICK_WRAP=true
+     export CRYOSPARC_FORCE_HOSTNAME=true
+     export CRYOSPARC_USE_GPU=true
+     export CRYOSPARC_CUDA_PATH=/usr/local/cuda
+     export CRYOSPARC_FORCE_USER=true
+     export CRYOSPARC_MONGO_EXTRA_FLAGS=" "
+    EOF
+
+    <%- end -%>
+
+    apptainer exec -B <%= cryosparc_datadir %>/config.sh:<%= cryosparc_master_path %>/config.sh \
+      -B <%= cryosparc_datadir %>/config.sh:<%= cryosparc_worker_path %>/config.sh \
+      -B <%= cryosparc_datadir %>/run:<%= cryosparc_master_path %>/run \
+      -B ${TMPDIR}:/tmp <%= cryosparc_image_base %>-<%= cryosparc_version %>.sif /bin/bash container.sh
+  
+script:
+  # Slurm option is mem, memory is passed from the form
+  copy_environment: true
+  email: ["<%= bc_email_address.strip %>"]
+  native:
+    - "--qos"
+    - "<%= qos_type %>"
+    - "--mem"
+    - "<%= mem %>GB"
+    - "--licenses"
+    - "common"
+    - "--ntasks-per-node"
+    - "<%= cores %>"
+    - "--nodes"
+    - "<%= nodes %>"
+    - "--constraint"
+    - "<%= bc_constraint.strip %>"
+    - "--gres"
+    - "<%= bc_gres.strip %>"
+    - "--reservation"
+    - "<%= bc_reservation.strip %>"

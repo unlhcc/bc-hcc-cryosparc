@@ -1,0 +1,152 @@
+---
+attributes:
+  desktop: "xfce"
+  bc_queue:
+    label: "Partition selection"
+    value: "batch"
+    help: |
+      - `batch` - The normal general access partition
+      - `gpu` - The gpu partition
+      - *other partitions may be specified if your account has access*
+  bc_num_slots: 1
+  bc_num_cores:
+    widget: "number_field"
+    label: "Number of cores"
+    help: "Number of cores requested on a node (min 1, max 16)"
+    min: 1
+    max: 16
+    step: 1
+    value: "1"
+    id: "num_cores"
+  bc_num_hours:
+    widget: "number_field"
+    label: "Running time in hours"
+    help: "Maximum runtime in hours (min 1, max 24)"
+    min: 1
+    max: 24
+    step: 1
+    value: "1"
+  bc_memory:
+    widget: "number_field"
+    label: "Requested RAM in GBs"
+    help: "Maximum memory requested (min 8GB, max 62GBs)"
+    min: 8 
+    max: 62
+    step: 1
+    value: "8"
+    id: "memory"
+  qos_type:
+    widget: select
+    label: "QoS type"
+    value: "short"
+    help: |
+      - `short` - Use the short QoS to increase job priority. Limits per user are 6 hour job run time, 2 jobs of 16CPUs or fewer.
+      - `normal` - Use the regular batch queue.
+    options:
+      - ["short", "short"]
+      - ["normal", "normal"]
+  bc_gres:
+    widget: "text_field"
+    label: "GRES"
+    help: "This field is used primarily for gpu submissions. You must specify a gres of at least `gpu` when using the GPU partition. Other possible values may b
+e
+ [found here](https://hcc.unl.edu/docs/submitting_jobs/submitting_gpu_jobs/#requesting-gpu-resources-in-your-slurm-script)."
+    value: ''
+  bc_constraint:
+    widget: "text_field"
+    label: "Job Constraints"
+    help: "Additional constraints for the job. Primarily used for specifying a [GPU type](https://hcc.unl.edu/docs/submitting_jobs/submitting_gpu_jobs/#availabl
+e
+-gpus) or [node type](https://hcc.unl.edu/docs/submitting_jobs/partitions/#use-of-infiniband-or-opa)."
+    value: ''
+  bc_email_address:
+    widget: "email_field"
+    value: ""
+    label: "Email"
+    help: "Email address used for notifications"
+  bc_reservation:
+    widget: "text_field"
+    label: "Reservation"
+    help: "Submit to a specific reservation if your account has access."
+    value: ''
+  bc_vnc_idle: 0
+  bc_vnc_resolution:
+    required: true
+  cryosparc_version:
+    widget: select
+    label: "CryoSPARC version"
+    help: "This defines the version of CryoSPARC you want to load."
+    options:
+            - [
+              "4.4.1", "4.4.1"
+              ]
+  cryosparc_license_id:
+    widget: text_field
+    required: true
+    placeholder: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    pattern: "^[\\w]{8}-[\\w]{4}-[\\w]{4}-[\\w]{4}-[\\w]{12}$"
+    label: "CryoSPARC License ID"
+    help: "Enter your personal CryoSPARC License ID. You can obtain license from https://cryosparc.com/download."
+  cryosparc_local_worker:
+    widget: "hidden_field"
+    value: "1"
+  cryosparc_master_path:
+    widget: "hidden_field"
+    value: /opt/cryosparc/cryosparc_master
+  cryosparc_worker_path:
+    widget: "hidden_field"
+    value: /opt/cryosparc/cryosparc_worker
+  cryosparc_datadir:
+    id: 'cryosparc_datadir'
+    data-filepicker: true
+    data-target-file-type: dirs  # Valid values are: files, dirs, or both
+    readonly: false
+    data-default-directory: "$WORK/cryosparc"
+    value: "$WORK/cryosparc"
+    help: Directory path for cryosparc database and configuration files
+  cryosparc_job_gpu_partition:
+    label: "Specify partition for CryoSPARC GPU jobs"
+    id: 'cryosparc_job_gpu_partition'
+    value: "gpu"
+    help: By default, GPU-based tasks are submitted to the `gpu` partition.  Specify an alternate partition here if your account has access.
+  cryosparc_user_password:
+    id: 'cryosparc_user_password'
+    widget: "hidden_field"
+    display: true
+  cryosparc_image_base:
+    widget: "hidden_field"
+    cacheable: false
+    value: '/work/HCC/APPTAINER/IMAGES/cryosparc'
+  cryosparc_new_session:
+    widget: "check_box"
+    help: Check to start new CryoSPARC Session | **Note:** Use with care!
+  advanced_settings:
+    widget: "check_box"
+    label: Show advanced settings...
+   
+form:
+  - cryosparc_user_password
+  - cryosparc_version
+  - cryosparc_license_id
+  - cryosparc_local_worker
+  - cryosparc_master_path
+  - cryosparc_worker_path
+  - cryosparc_image_base
+  - cryosparc_new_session
+  - advanced_settings
+  - cryosparc_datadir
+  - cryosparc_job_gpu_partition
+  - desktop
+  - bc_vnc_idle
+  - bc_vnc_resolution
+  - bc_num_slots
+  - bc_num_cores
+  - bc_num_hours
+  - bc_memory
+  - qos_type
+  - bc_queue
+  - bc_reservation
+  - bc_gres
+  - bc_constraint
+  - bc_email_address
+  - bc_email_on_started

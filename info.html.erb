@@ -1,0 +1,29 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script> function copyToClipboard(element) {
+  var $temp = $("<input>");
+  $("body").append($temp);
+  $temp.val($(element).val()).select();
+  document.execCommand("copy");
+  $temp.remove();
+}
+</script>
+
+<%
+data = File.read(user_defined_context_file)
+udcf = JSON.parse(data)
+%>
+
+<h4>To login, use the following credentials:</h4>
+<form action="javascript:void(0);">
+  <input type="hidden" id="username" name="username" value="<%= ENV["USER"] %>">
+  <input type="hidden" id="password" name="password" value="<%= udcf["cryosparc_user_password"] %>">
+  Email: <%= ENV["USER"] %>@swan.unl.edu <br/>
+  Password: <button class="btn btn-primary" style="transform: scale(0.9, 0.9);"  onclick="copyToClipboard('#password')">Click to copy</button> <br/>
+  <%-
+    if File.exist?("#{staged_root}/connection.yml")
+  %>
+    Login URL: http://<%= connect.host %>:<%= connect.cs_port %>/login
+  <%-
+    end
+  %>
+</form>

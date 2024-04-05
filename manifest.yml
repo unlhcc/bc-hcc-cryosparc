@@ -1,0 +1,10 @@
+---
+name: CryoSPARC
+category: Interactive Apps
+subcategory: GUIs
+role: batch_connect
+description: |
+  This app will launch the [CryoSPARC] GUI.  You will be able
+  to interact with the CryoSPARC GUI through a VNC session.
+
+  [CryoSPARC]: https://cryosparc.com/

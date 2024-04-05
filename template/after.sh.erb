@@ -1,0 +1,11 @@
+# https://discourse.openondemand.org/t/bc-connect-app-wait-for-process-to-start-before-displaying-connect/2376
+# Wait for the CryoSPARC Server to start
+timeout 30
+echo "Waiting for CryoSPARC Server to open port ${cs_port}..."
+if wait_until_port_used "${host}:${cs_port}" 600; then
+	echo "Discovered CryoSPARC Server listening on port ${cs_port}!"
+else
+  echo "Timed out waiting for CryoSPARC Server to open port ${cs_port}!"
+  clean_up 1
+fi
+sleep 2
