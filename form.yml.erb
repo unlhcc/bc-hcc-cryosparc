@@ -86,7 +86,7 @@ e
     placeholder: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
     pattern: "^[\\w]{8}-[\\w]{4}-[\\w]{4}-[\\w]{4}-[\\w]{12}$"
     label: "CryoSPARC License ID"
-    help: "Enter your personal CryoSPARC License ID. You can obtain license from https://cryosparc.com/download."
+    help: "Enter your personal CryoSPARC License ID. You can obtain a license from https://cryosparc.com/download."
   cryosparc_local_worker:
     widget: "hidden_field"
     value: "1"
@@ -97,13 +97,15 @@ e
     widget: "hidden_field"
     value: /opt/cryosparc/cryosparc_worker
   cryosparc_datadir:
+    # https://github.com/OSC/bc_js_filepicker
     id: 'cryosparc_datadir'
     data-filepicker: true
     data-target-file-type: dirs  # Valid values are: files, dirs, or both
-    readonly: false
+    readonly: true
     data-default-directory: "$WORK/cryosparc"
     value: "$WORK/cryosparc"
-    help: Directory path for cryosparc database and configuration files
+    label: "CryoSPARC session path"
+    help: Directory path for CryoSPARC session folder (database and configuration files).
   cryosparc_job_gpu_partition:
     label: "Specify partition for CryoSPARC GPU jobs"
     id: 'cryosparc_job_gpu_partition'
@@ -119,7 +121,8 @@ e
     value: '/work/HCC/APPTAINER/IMAGES/cryosparc'
   cryosparc_new_session:
     widget: "check_box"
-    help: Check to start new CryoSPARC Session | **Note:** Use with care!
+    help: Check to start new CryoSPARC session.  **Note:** Use with care!  _All data in the session folder will be lost._
+    label: "Start a new CryoSPARC session?"
   advanced_settings:
     widget: "check_box"
     label: Show advanced settings...
