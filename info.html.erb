@@ -23,10 +23,11 @@ udcf = JSON.parse(data)
     if File.exist?("#{staged_root}/connection.yml")
   %>
     Login URL: http://<%= connect.host %>:<%= connect.cs_port %>/login
+    <br/><i>  *Note this URL is only valid in the browser within the Open OnDemand virtual desktop session, and is not generally accessible.</i>
   <%-
     end
-    %> <br/><i>  *Note this URL is only valid for the browser within the Open OnDemand virtual desktop session, and is not generally accessible.</i>
+    %>
 </form>
 
 <hr>
-<b>Please note:</b>  In order for CryoSPARC to shut down gracefully, please end your session by choosing "Log Out" from the main desktop menu in the upper left corner when finished.
+<b>Please note:</b>  In order for CryoSPARC to shut down gracefully, please end your session by choosing "Log Out" from the main desktop menu in the upper left corner within the CryoSPARC app when finished.
