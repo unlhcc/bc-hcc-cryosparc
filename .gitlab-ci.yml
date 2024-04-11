@@ -1,0 +1,3 @@
+include:
+  - project: 'hcc/hcc-ood'
+    file: '/ci_templates/OOD.gitlab-ci.yml'

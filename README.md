@@ -3,7 +3,7 @@
 [![pipeline status](https://git.unl.edu/hcc/bc-hcc-cryosparc/badges/master/pipeline.svg)](https://git.unl.edu/hcc/bc-hcc-cryosparc/-/commits/master)
 [![GitHub License](https://img.shields.io/badge/license-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
-A Batch Connect app designed for OSC OnDemand that launches CryoSPARC (Freeview) within an
+A Batch Connect app designed for Open OnDemand that launches CryoSPARC within an
 SLURM batch job.
 
 Based off of https://github.com/OSC/bc_osc_comsol.
