@@ -104,6 +104,7 @@ batch_connect:
     apptainer exec -B <%= cryosparc_datadir %>/config.sh:<%= cryosparc_master_path %>/config.sh \
       -B <%= cryosparc_datadir %>/config.sh:<%= cryosparc_worker_path %>/config.sh \
       -B <%= cryosparc_datadir %>/run:<%= cryosparc_master_path %>/run \
+      -B /work/HCC/BCRF/app_specific/deepemhancer/2023.08.23/:/usr/local/share/deepemhancer_models/ \
       -B ${TMPDIR}:/tmp <%= cryosparc_image_base %>-<%= cryosparc_version %>.sif /bin/bash container.sh
   
 script:
