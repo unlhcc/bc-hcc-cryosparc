@@ -175,7 +175,7 @@ cat << EOF > ${WORKING_DIR}/cluster_folder/cluster_script.sh
 #SBATCH --gres=gpu:{{ num_gpu }}
 {%- endif %}
 #SBATCH --mem={{ (ram_gb*1000)|int }}MB
-#SBATCH --time=168:00:00
+#SBATCH --time=72:00:00
 #SBATCH --output={{ job_dir_abs }}/job_%J.out
 #SBATCH --error={{ job_dir_abs }}/job_%J.err
 #SBATCH --export=NONE
