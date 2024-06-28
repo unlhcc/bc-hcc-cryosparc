@@ -110,6 +110,15 @@ e
     id: 'cryosparc_job_gpu_partition'
     value: "gpu"
     help: By default, GPU-based tasks are submitted to the `gpu` partition.  Specify an alternate partition here if your account has access.
+  cryosparc_highmem_factor:
+    widget: "number_field"
+    value: "4"
+    label: "Highmem factor"
+    help: "Numerical factor to increase RAM request for highmem cluster lane"
+    min: 1
+    max: 10
+    step: 1
+    id: 'cryosparc_highmem_factor'
   cryosparc_user_password:
     id: 'cryosparc_user_password'
     widget: "hidden_field"
@@ -125,6 +134,7 @@ e
   advanced_settings:
     widget: "check_box"
     label: Show advanced settings...
+    cacheable: false
    
 form:
   - cryosparc_user_password
@@ -138,6 +148,7 @@ form:
   - advanced_settings
   - cryosparc_datadir
   - cryosparc_job_gpu_partition
+  - cryosparc_highmem_factor
   - desktop
   - bc_vnc_idle
   - bc_vnc_resolution
