@@ -21,6 +21,8 @@ begin
 session_dir = session.staged_root
 new_session_file = Pathname.new(session_dir.to_s) + ".first_run"
 force_new_session = new_session_file.exist?
+
+highmem_factor = context.cryosparc_highmem_factor.blank? ? 4 : context.cryosparc_highmem_factor.to_i
 %>
 
 # init lmod within container
@@ -45,21 +47,9 @@ export SLURM_MEMORY="<%= context.bc_memory.to_i %>"
 export SLURM_CORES="<%= context.bc_num_cores.to_i %>"
 export CS_JOB_GPU_PARTITION="<%= context.cryosparc_job_gpu_partition %>"
 export CS_DATADIR=$(echo -n "<%= context.cryosparc_datadir %>")
+export CS_HIGHMEM_FACTOR="<%= highmem_factor %>"
 
-# New session
-# <%= force_new_session %>
-# <%= new_session_file %>
-
-echo 'CS_DATADIR:' $CS_DATADIR
-
-echo 'SLURM_MEMORY ' $SLURM_MEMORY
-echo 'SLURM_CORES ' $SLURM_CORES
-
-echo 'CS_PASSWORD ' $CS_PASSWORD
-echo 'CRYOSPARC LICENSE ' $CS_LICENSE
-echo 'CRYOSPARC BASE PORT ' $CS_PORT
-echo 'CS_JOB_GPU_PARTITION ' $CS_JOB_GPU_PARTITION
-
+# New session logic
 <%- if context.cryosparc_new_session == "1" -%>
   # Replace license, host, port values in the config files
   envsubst '${CS_LICENSE}:${CS_HOST}:${CS_PORT}' < <%= context.cryosparc_datadir %>/config.sh.in > /opt/cryosparc/cryosparc_master/config.sh
@@ -142,14 +132,31 @@ cryosparcw connect --worker ${MASTER_HOSTNAME} --master ${MASTER_HOSTNAME} --por
 # https://discuss.cryosparc.com/t/error-assigning-cpus-to-worker/9875
 cryosparcw connect --worker ${MASTER_HOSTNAME} --master ${MASTER_HOSTNAME} --port ${CS_PORT} --ssdpath "/tmp" $usegpu --rams ${CRYOSPARC_SLURM_MEMORY} --cpus ${SLURM_CORES} --update
 
-# create cluster configuration directory
+# create cluster configuration directories
 mkdir -p ${WORKING_DIR}/cluster_folder
+mkdir -p ${WORKING_DIR}/cluster_folder.highmem
 
 echo `pwd`
 # Write cluster configuration json file
 cat << EOF > ${WORKING_DIR}/cluster_folder/cluster_info.json
 {
 "name" : "<%= context.cluster %>",
+"worker_bin_path" : "/opt/cryosparc/cryosparc_worker/bin/cryosparcw",
+"cache_path" : "/tmp",
+"cache_reserve_mb" : 10000,
+"cache_quota_mb": null,
+"send_cmd_tpl" : "{{ command }}",
+"qsub_cmd_tpl" : "cd ${WORK} && sbatch {{ script_path_abs }}",
+"qstat_cmd_tpl" : "squeue -j {{ cluster_job_id }}",
+"qdel_cmd_tpl" : "scancel {{ cluster_job_id }}",
+"qinfo_cmd_tpl" : "sinfo"
+}
+EOF
+
+# Write highmem json configuration
+cat << EOF > ${WORKING_DIR}/cluster_folder.highmem/cluster_info.json
+{
+"name" : "<%= context.cluster %>-highmem",
 "worker_bin_path" : "/opt/cryosparc/cryosparc_worker/bin/cryosparcw",
 "cache_path" : "/tmp",
 "cache_reserve_mb" : 10000,
@@ -190,7 +197,37 @@ echo "CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES}
 apptainer exec -B <%= context.cryosparc_datadir %>/config.sh:<%= context.cryosparc_worker_path %>/config.sh <%= context.cryosparc_image_base %>-<%= context.cryosparc_version %>.sif {{ worker_bin_path }} run {{ run_args }}
 EOF
 
+# Write highmem SLURM job submission template
+cat << EOF > ${WORKING_DIR}/cluster_folder.highmem/cluster_script.sh
+#!/bin/bash
+#SBATCH --job-name=cryosparc_{{ project_uid }}_{{ job_uid }}
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node={{ num_cpu }}
+{%- if num_gpu == 0 %}
+#SBATCH --partition=batch
+{%- else %}
+#SBATCH --partition=${CS_JOB_GPU_PARTITION},gpu
+#SBATCH --gres=gpu:{{ num_gpu }}
+{%- endif %}
+#SBATCH --mem={{ (${CS_HIGHMEM_FACTOR}*ram_gb*1000)|int }}MB
+#SBATCH --time=72:00:00
+#SBATCH --output={{ job_dir_abs }}/job_%J.out
+#SBATCH --error={{ job_dir_abs }}/job_%J.err
+#SBATCH --export=NONE
+
+module purge
+module load apptainer
+
+echo "CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES}
+
+#export RUN_ARGS="{{ run_args }}"
+
+apptainer exec -B <%= context.cryosparc_datadir %>/config.sh:<%= context.cryosparc_worker_path %>/config.sh <%= context.cryosparc_image_base %>-<%= context.cryosparc_version %>.sif {{ worker_bin_path }} run {{ run_args }}
+EOF
+
+# Add two cluster lanes
 pushd ${WORKING_DIR}/cluster_folder && cryosparcm cluster connect && popd
+pushd ${WORKING_DIR}/cluster_folder.highmem && cryosparcm cluster connect && popd
 #cryosparcm restart
 
 # Ensure that the user's configured login shell is used

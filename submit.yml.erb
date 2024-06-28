@@ -71,13 +71,6 @@ batch_connect:
 
     export APPTAINER_BINDPATH="/home,/work,/common,/util,/media,/mnt,/srv,/var/run,/run,/tmp/99-base.sh:/.singularity.d/env/99-base.sh:ro,$SLURM_BIND_MOUNTS"
 
-    # <%= ENV["HOME"] %>
-    # <%= ENV["WORK"] %>
-    # <%= ENV["COMMON"] %>
-    # <%= datadir_exists %>
-    # <%= staged_root %>
-
-
     # create script
     <%- if cryosparc_new_session == "1" or ! datadir_exists -%>
      touch <%= staged_root %>/.first_run
