@@ -8,6 +8,7 @@ ENV["COMMON"]=ENV["HOME"].sub("home","common")
 output,status = Open3.capture2e("echo %s" % [cryosparc_datadir])
 datadir = Pathname.new(output.strip.to_s)
 datadir_exists = datadir.directory?
+datadir_empty = datadir.empty?
 %>
 
 ---
@@ -72,7 +73,7 @@ batch_connect:
     export APPTAINER_BINDPATH="/home,/work,/common,/util,/media,/mnt,/srv,/var/run,/run,/tmp/99-base.sh:/.singularity.d/env/99-base.sh:ro,$SLURM_BIND_MOUNTS"
 
     # create script
-    <%- if cryosparc_new_session == "1" or ! datadir_exists -%>
+    <%- if cryosparc_new_session == "1" or ! datadir_exists or datadir_empty -%>
      touch <%= staged_root %>/.first_run
      rm -rf <%= cryosparc_datadir %>
      mkdir -p <%= cryosparc_datadir %>/run
