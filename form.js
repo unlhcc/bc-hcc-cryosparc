@@ -40,6 +40,20 @@ function toggle_visibilty_of_form_group(form_id, show) {
   }
 }
 
+function toggle_visibilty_of_form_checkgroup(form_id, show) {
+  let form_element = $(form_id);
+  let parent = form_element.parent();
+  let grandparent = parent.parent()
+
+  if(show) {
+    grandparent.show();
+  } else {
+    form_element.val('');
+    grandparent.hide();
+  }
+}
+
+
 /**
  * advanced settings toggle
  */
@@ -67,6 +81,26 @@ function advanced_settings_change_handler() {
     toggle.checked == true ? true : false
   );
   $('#cryosparc_highmem_factor')[0].value = cs_highmem.defaultValue
+
+  let cs_batchruntime = $('#cryosparc_batchjob_runtime')[0];
+  toggle_visibilty_of_form_group(
+    '#cryosparc_batchjob_runtime',
+    toggle.checked == true ? true : false
+  );
+  $('#cryosparc_batchjob_runtime')[0].value = cs_batchruntime.defaultValue
+
+  let cs_multiple_master = $('#cryosparc_allow_multiple_master')[0];
+  toggle_visibilty_of_form_checkgroup(
+    '#cryosparc_allow_multiple_master',
+    toggle.checked == true ? true : false
+  );
+  $('#cryosparc_allow_multiple_master')[0].value = cs_multiple_master.defaultValue
+
+  let cs_adv_header = $('#advanced_settings_header')[0];
+  toggle_visibilty_of_form_group(
+    '#advanced_settings_header',
+    toggle.checked == true ? true : false
+  );
 
 
 }

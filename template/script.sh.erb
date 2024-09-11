@@ -23,6 +23,7 @@ new_session_file = Pathname.new(session_dir.to_s) + ".first_run"
 force_new_session = new_session_file.exist?
 
 highmem_factor = context.cryosparc_highmem_factor.blank? ? 4 : context.cryosparc_highmem_factor.to_i
+batchjob_runtime = context.cryosparc_batchjob_runtime.blank? ? 48 : context.cryosparc_batchjob_runtime.to_i
 %>
 
 # init lmod within container
@@ -48,6 +49,7 @@ export SLURM_CORES="<%= context.bc_num_cores.to_i %>"
 export CS_JOB_GPU_PARTITION="<%= context.cryosparc_job_gpu_partition %>"
 export CS_DATADIR=$(echo -n "<%= context.cryosparc_datadir %>")
 export CS_HIGHMEM_FACTOR="<%= highmem_factor %>"
+export CS_BATCH_RUNTIME="<%= batchjob_runtime %>"
 
 # New session logic
 <%- if context.cryosparc_new_session == "1" -%>
@@ -182,7 +184,7 @@ cat << EOF > ${WORKING_DIR}/cluster_folder/cluster_script.sh
 #SBATCH --gres=gpu:{{ num_gpu }}
 {%- endif %}
 #SBATCH --mem={{ (ram_gb*1000)|int }}MB
-#SBATCH --time=72:00:00
+#SBATCH --time=${CS_BATCH_RUNTIME}:00:00
 #SBATCH --output={{ job_dir_abs }}/job_%J.out
 #SBATCH --error={{ job_dir_abs }}/job_%J.err
 #SBATCH --export=NONE
@@ -210,7 +212,7 @@ cat << EOF > ${WORKING_DIR}/cluster_folder.highmem/cluster_script.sh
 #SBATCH --gres=gpu:{{ num_gpu }}
 {%- endif %}
 #SBATCH --mem={{ (${CS_HIGHMEM_FACTOR}*ram_gb*1000)|int }}MB
-#SBATCH --time=72:00:00
+#SBATCH --time=${CS_BATCH_RUNTIME}:00:00
 #SBATCH --output={{ job_dir_abs }}/job_%J.out
 #SBATCH --error={{ job_dir_abs }}/job_%J.err
 #SBATCH --export=NONE

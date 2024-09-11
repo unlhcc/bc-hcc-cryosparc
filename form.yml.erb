@@ -77,8 +77,8 @@ e
     label: "CryoSPARC version"
     help: "This defines the version of CryoSPARC you want to load."
     options:
-            - [ "4.4.1", "4.4.1" ]
-            - [ "4.5.1", "4.5.1" ]
+            - [ "4.4", "4.4.1" ]
+            - [ "4.5", "4.5.3" ]
   cryosparc_license_id:
     widget: text_field
     required: true
@@ -119,6 +119,15 @@ e
     max: 10
     step: 1
     id: 'cryosparc_highmem_factor'
+  cryosparc_batchjob_runtime:
+    widget: "number_field"
+    value: "48"
+    label: "Batch job maximum runtime"
+    help: "Max runtime (in hours) for jobs submitted to the cluster lanes (default 48 hours)"
+    min: 1
+    max: 168
+    step: 1
+    id: 'cryosparc_batchjob_runtime'
   cryosparc_user_password:
     id: 'cryosparc_user_password'
     widget: "hidden_field"
@@ -131,11 +140,33 @@ e
     widget: "check_box"
     help: Check to start new CryoSPARC session.  **Note:** Use with care!  _All data in the session folder will be lost._
     label: "Start a new CryoSPARC session?"
+  cryosparc_allow_multiple_master:
+    widget: "check_box"
+    help: "Allow running multiple master processes  **Note:** Use with care!  _Multiple masters cannot share a session path!_"
+    label: "Allow multiple CryoSPARC masters?"
+    cacheable: false
+    id: 'cryosparc_allow_multiple_master'
   advanced_settings:
     widget: "check_box"
     label: Show advanced settings...
     cacheable: false
-   
+  hr:
+    class: "d-none"
+    skip_label: true
+    readonly: true
+    help: <hr>
+  standard_settings_header:
+    class: "d-none"
+    skip_label: true
+    readonly: true
+    help: <h3>Standard settings</h3>
+  advanced_settings_header:
+    class: "d-none"
+    skip_label: true
+    readonly: true
+    help: <h3>Advanced settings</h3>
+    id: advanced_settings_header
+
 form:
   - cryosparc_user_password
   - cryosparc_version
@@ -146,12 +177,17 @@ form:
   - cryosparc_image_base
   - cryosparc_new_session
   - advanced_settings
+  - advanced_settings_header
   - cryosparc_datadir
   - cryosparc_job_gpu_partition
   - cryosparc_highmem_factor
+  - cryosparc_batchjob_runtime
+  - cryosparc_allow_multiple_master
   - desktop
   - bc_vnc_idle
   - bc_vnc_resolution
+  - hr
+  - standard_settings_header
   - bc_num_slots
   - bc_num_cores
   - bc_num_hours
