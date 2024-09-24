@@ -130,9 +130,9 @@ cryosparcm status
 
 firefox -foreground -url http://${MASTER_HOSTNAME}.swan.hcc.unl.edu:${CS_PORT} &
 
-cryosparcw connect --worker ${MASTER_HOSTNAME} --master ${MASTER_HOSTNAME} --port ${CS_PORT} --ssdpath "/tmp" $usegpu --rams ${CRYOSPARC_SLURM_MEMORY} --cpus ${SLURM_CORES}
+cryosparcw connect --worker ${MASTER_HOSTNAME} --master ${MASTER_HOSTNAME} --port ${CS_PORT} --ssdpath "/scratch" $usegpu --rams ${CRYOSPARC_SLURM_MEMORY} --cpus ${SLURM_CORES}
 # https://discuss.cryosparc.com/t/error-assigning-cpus-to-worker/9875
-cryosparcw connect --worker ${MASTER_HOSTNAME} --master ${MASTER_HOSTNAME} --port ${CS_PORT} --ssdpath "/tmp" $usegpu --rams ${CRYOSPARC_SLURM_MEMORY} --cpus ${SLURM_CORES} --update
+cryosparcw connect --worker ${MASTER_HOSTNAME} --master ${MASTER_HOSTNAME} --port ${CS_PORT} --ssdpath "/scratch" $usegpu --rams ${CRYOSPARC_SLURM_MEMORY} --cpus ${SLURM_CORES} --update
 
 # create cluster configuration directories
 mkdir -p ${WORKING_DIR}/cluster_folder
