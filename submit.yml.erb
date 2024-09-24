@@ -122,7 +122,7 @@ script:
     - "<%= bc_gres.strip %>"
     - "--reservation"
     - "<%= bc_reservation.strip %>"
-<% if ! cryosparc_allow_multiple_master == "1" -%>
+    <%- unless cryosparc_allow_multiple_master == "1" -%>
     - "--dependency"
     - "singleton"
-<%- end -%>
+    <%- end -%>
