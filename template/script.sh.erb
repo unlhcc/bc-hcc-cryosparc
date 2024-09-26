@@ -144,7 +144,7 @@ cat << EOF > ${WORKING_DIR}/cluster_folder/cluster_info.json
 {
 "name" : "<%= context.cluster %>",
 "worker_bin_path" : "/opt/cryosparc/cryosparc_worker/bin/cryosparcw",
-"cache_path" : "/tmp",
+"cache_path" : "/scratch",
 "cache_reserve_mb" : 10000,
 "cache_quota_mb": null,
 "send_cmd_tpl" : "{{ command }}",
@@ -160,7 +160,7 @@ cat << EOF > ${WORKING_DIR}/cluster_folder.highmem/cluster_info.json
 {
 "name" : "<%= context.cluster %>-highmem",
 "worker_bin_path" : "/opt/cryosparc/cryosparc_worker/bin/cryosparcw",
-"cache_path" : "/tmp",
+"cache_path" : "/scratch",
 "cache_reserve_mb" : 10000,
 "cache_quota_mb": null,
 "send_cmd_tpl" : "{{ command }}",
