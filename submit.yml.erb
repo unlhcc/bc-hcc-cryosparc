@@ -5,6 +5,7 @@ nodes = bc_num_slots.blank? ? 1 : bc_num_slots.to_i
 
 ENV["WORK"]=ENV["HOME"].sub("home","work")
 ENV["COMMON"]=ENV["HOME"].sub("home","common")
+ENV["NRDSTOR"]=ENV["HOME"].sub("home","/mnt/nrdstor")
 output,status = Open3.capture2e("echo %s" % [cryosparc_datadir])
 datadir = Pathname.new(output.strip.to_s)
 datadir_exists = datadir.directory?
@@ -19,6 +20,7 @@ batch_connect:
   conn_params: 
     - cryosparc_user_password
     - cs_port
+    - cs_version
   timeout:
 #  clean_script: "..."
   clean_file: "clean.sh"
@@ -26,6 +28,7 @@ batch_connect:
   script_wrapper: |
     export WORK=${HOME/#\/home/\/work}
     export COMMON=${HOME/#\/home/\/common}
+    export NRDSTOR=${HOME/#\/home/\/mnt/nrdstor}
     export APPTAINER_CACHEDIR=${WORK}/.apptainer
     export REGISTRY="hcc-docker-registry.unl.edu"
     cat << "CTRSCRIPT" > container.sh

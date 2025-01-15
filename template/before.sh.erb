@@ -1,8 +1,14 @@
+<%-
+    cs_version = context.cryosparc_version.blank? ? 1 : context.cryosparc_version.to_s.tr('.', '')
+%>
+
 # Export the module function if it exists
 [[ $(type -t module) == "function" ]] && export -f module
 
-# Find available port to run server on
-export cs_port=$(find_port ${host})
+# Set db port based on CS version and UID
+export cs_version="<%= cs_version %>"
+#export cs_port=$(find_port ${host})
+export cs_port=$((20000 + UID + cs_version))
 
 # Define a password and export it for CS authentication
 #cs_password="$(create_passwd 16)"
