@@ -89,13 +89,6 @@ function advanced_settings_change_handler() {
   );
   $('#cryosparc_batchjob_runtime')[0].value = cs_batchruntime.defaultValue
 
-  let cs_multiple_master = $('#cryosparc_allow_multiple_master')[0];
-  toggle_visibilty_of_form_checkgroup(
-    '#cryosparc_allow_multiple_master',
-    toggle.checked == true ? true : false
-  );
-  $('#cryosparc_allow_multiple_master')[0].value = cs_multiple_master.defaultValue
-
   let cs_adv_header = $('#advanced_settings_header')[0];
   toggle_visibilty_of_form_group(
     '#advanced_settings_header',

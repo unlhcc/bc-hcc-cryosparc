@@ -141,12 +141,6 @@ e
     widget: "check_box"
     help: Check to start new CryoSPARC session.  **Note:** Use with care!  _All data in the session folder will be lost._
     label: "Start a new CryoSPARC session?"
-  cryosparc_allow_multiple_master:
-    widget: "check_box"
-    help: "Allow running multiple master processes  **Note:** Use with care!  _Multiple masters cannot share a session path!_"
-    label: "Allow multiple CryoSPARC masters?"
-    cacheable: false
-    id: 'cryosparc_allow_multiple_master'
   advanced_settings:
     widget: "check_box"
     label: Show advanced settings...
@@ -183,7 +177,6 @@ form:
   - cryosparc_job_gpu_partition
   - cryosparc_highmem_factor
   - cryosparc_batchjob_runtime
-  - cryosparc_allow_multiple_master
   - desktop
   - bc_vnc_idle
   - bc_vnc_resolution
