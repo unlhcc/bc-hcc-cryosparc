@@ -10,7 +10,7 @@ cryosparcm cluster remove <%= context.cluster %>
 
 # Make a database backup to hedge our bets
 cryosparcm backup \
-	--dir=${WORK}/.cryosparc/db_backups \
+	--dir=${NRDSTOR}/.cryosparc/db_backups \
 	--file=database_backup_$(date +"%A").archive
 
 # shutdown master
