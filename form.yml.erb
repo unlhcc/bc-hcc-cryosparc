@@ -102,8 +102,9 @@ e
     data-filepicker: true
     data-target-file-type: dirs  # Valid values are: files, dirs, or both
     readonly: true
-    data-default-directory: "$WORK/cryosparc"
-    value: "$WORK/cryosparc"
+    data-default-directory: "/mnt/nrdstor/<%= User.new.group.to_s %>/<%= User.new.name %>/cryosparc"
+    data-file_picker_favorites: '[{"title": "NRDStor", "href": "/mnt/nrdstor/<%= User.new.group.to_s %>/<%= User.new.name %>"},{"title": "WORK", "href": "/work/<%= User.new.group.to_s %>/<%= User.new.name %>"}]'
+    value: "/mnt/nrdstor/<%= User.new.group.to_s %>/<%= User.new.name %>/cryosparc"
     label: "CryoSPARC session path"
     help: Directory path for CryoSPARC session folder (database and configuration files).
   cryosparc_job_gpu_partition:
