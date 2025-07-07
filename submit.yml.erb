@@ -4,7 +4,6 @@ mem = bc_memory.blank? ? 1 : bc_memory.to_i
 nodes = bc_num_slots.blank? ? 1 : bc_num_slots.to_i
 
 ENV["WORK"]=ENV["HOME"].sub("home","work")
-ENV["COMMON"]=ENV["HOME"].sub("home","common")
 ENV["NRDSTOR"]=ENV["HOME"].sub("home","/mnt/nrdstor")
 output,status = Open3.capture2e("echo %s" % [cryosparc_datadir])
 datadir = Pathname.new(output.strip.to_s)
@@ -27,7 +26,6 @@ batch_connect:
   websockify_cmd: '/usr/local/bin/websockify'
   script_wrapper: |
     export WORK=${HOME/#\/home/\/work}
-    export COMMON=${HOME/#\/home/\/common}
     export NRDSTOR=${HOME/#\/home/\/mnt/nrdstor}
     export APPTAINER_CACHEDIR=${WORK}/.apptainer
     export REGISTRY="hcc-docker-registry.unl.edu"
@@ -73,7 +71,7 @@ batch_connect:
     SLURM_BIND_MOUNTS+=",/var/lib/sss/mc"
     SLURM_BIND_MOUNTS+=",/etc/passwd:/etc/passwd.system"
 
-    export APPTAINER_BINDPATH="/home,/work,/common,/util,/media,/mnt,/srv,/var/run,/run,/tmp/99-base.sh:/.singularity.d/env/99-base.sh:ro,$SLURM_BIND_MOUNTS"
+    export APPTAINER_BINDPATH="/home,/work,/util,/media,/mnt,/srv,/var/run,/run,/tmp/99-base.sh:/.singularity.d/env/99-base.sh:ro,$SLURM_BIND_MOUNTS"
 
     # create script
     <%- if cryosparc_new_session == "1" or ! datadir_exists or datadir_empty -%>
@@ -113,8 +111,6 @@ script:
     - "<%= qos_type %>"
     - "--mem"
     - "<%= mem %>GB"
-    - "--licenses"
-    - "common"
     - "--ntasks-per-node"
     - "<%= cores %>"
     - "--nodes"
