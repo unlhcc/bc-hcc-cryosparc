@@ -196,7 +196,9 @@ echo "CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES}
 
 #export RUN_ARGS="{{ run_args }}"
 
-apptainer exec -B <%= context.cryosparc_datadir %>/config.sh:<%= context.cryosparc_worker_path %>/config.sh <%= context.cryosparc_image_base %>-<%= context.cryosparc_version %>.sif {{ worker_bin_path }} run {{ run_args }}
+apptainer exec -B <%= context.cryosparc_datadir %>/config.sh:<%= context.cryosparc_worker_path %>/config.sh \
+-B <%= context.deepemhancer_model_path %>:/usr/local/share/deepemhancer_models \
+<%= context.cryosparc_image_base %>-<%= context.cryosparc_version %>.sif {{ worker_bin_path }} run {{ run_args }}
 EOF
 
 # Write highmem SLURM job submission template
@@ -224,7 +226,9 @@ echo "CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES}
 
 #export RUN_ARGS="{{ run_args }}"
 
-apptainer exec -B <%= context.cryosparc_datadir %>/config.sh:<%= context.cryosparc_worker_path %>/config.sh <%= context.cryosparc_image_base %>-<%= context.cryosparc_version %>.sif {{ worker_bin_path }} run {{ run_args }}
+apptainer exec -B <%= context.cryosparc_datadir %>/config.sh:<%= context.cryosparc_worker_path %>/config.sh \
+-B <%= context.deepemhancer_model_path %>:/usr/local/share/deepemhancer_models \
+<%= context.cryosparc_image_base %>-<%= context.cryosparc_version %>.sif {{ worker_bin_path }} run {{ run_args }}
 EOF
 
 # Add two cluster lanes
